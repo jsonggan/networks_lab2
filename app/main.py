@@ -2,16 +2,12 @@ from fastapi import FastAPI, Response
 from data import students
 from typing import Optional
 import sqlite3
+from db.db import setup_database
 
-data = [ (1006283, 'Gan Chin Song', 5.0), (1000000, 'Shelen Go', '4.31')]
-
-con = sqlite3.connect("simple.db")
-cur = con.cursor() # database cursor
-cur.execute("CREATE TABLE student(id, name, gpa)")
-cur.executemany("INSERT INTO student VALUES (?,?,?)", data)
-con.commit()
 
 app = FastAPI()
+# Call the setup_database function to ensure the database is ready
+db_path = "simple.db"
 
 @app.get("/")
 def read_root():
@@ -27,5 +23,26 @@ def find_student(student_id: str, response: Response):
 
 @app.get('/students')
 def get_students(sortBy: Optional[str] = None, limit: Optional[int] = None):
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
     # TODO: if parameters are not None, sort & limit...
-    return {"message" : "correct"}
+    query = "SELECT * FROM student"
+    # TODO: validate the sortBy value, can only be id and gpa
+    if sortBy in ['id', 'gpq']:
+        query += f" ORDER BY {sortBy}"
+    # TODO: validate the count value, it should only be integer and cannot be a non positive value
+    if limit:
+        query += f" LIMIT {limit}"
+        
+    cur.execute(query)
+    students = cur.fetchall()
+    
+    student_list = [{
+        'id': student[0],
+        'name': student[1],
+        'gpa': student[2] 
+    } for student in students]
+    
+    con.close()
+    
+    return student_list
