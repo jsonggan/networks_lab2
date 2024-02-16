@@ -4,7 +4,6 @@ from typing import Optional
 import sqlite3
 from db.db import setup_database
 
-
 app = FastAPI()
 # Call the setup_database function to ensure the database is ready
 db_path = "simple.db"
@@ -22,16 +21,26 @@ def find_student(student_id: str, response: Response):
     return None
 
 @app.get('/students')
-def get_students(sortBy: Optional[str] = None, limit: Optional[int] = None):
+def get_students(response: Response, sortBy: Optional[str] = None, limit: Optional[int] = None):
     con = sqlite3.connect(db_path)
     cur = con.cursor()
-    # TODO: if parameters are not None, sort & limit...
+    
     query = "SELECT * FROM student"
-    # TODO: validate the sortBy value, can only be id and gpa
-    if sortBy in ['id', 'gpq']:
+    
+    if sortBy:
+        if sortBy not in ['id', 'gpa']:
+            response.status_code = 422
+            return { 'message': "sortBy can only receive id and gpa"}
         query += f" ORDER BY {sortBy}"
-    # TODO: validate the count value, it should only be integer and cannot be a non positive value
+        
     if limit:
+        try:
+            limit = int(limit)
+            if limit <= 0:
+                raise ValueError
+        except ValueError:
+            response.status_code = 422
+            return {'message': "limit must be a positive integer."}
         query += f" LIMIT {limit}"
         
     cur.execute(query)
