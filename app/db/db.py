@@ -22,7 +22,8 @@ def setup_database():
         
         data = [
             (1006283, 'Gan Chin Song', 5.0),
-            (1000000, 'Shelen Go', 4.31)
+            (1000000, 'Shelen Go', 4.31),
+            (1004567, 'John', 5.3),
         ]
         
         cur.executemany("INSERT INTO student VALUES (?,?,?)", data)
