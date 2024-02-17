@@ -11,10 +11,10 @@ db_path = "simple.db"
 
 @app.get("/")
 def read_root():
-    return "How are you?"
+    return {"message": "Welcome to simple rest api!"}
 
 @app.get("/students/{student_id}")
-def find_student(student_id: str, response: Response):
+def find_student(student_id: int, response: Response):
     for student in students:
         if student["id"] == student_id:
             return student
@@ -35,11 +35,7 @@ def get_students(response: Response, sortBy: Optional[str] = None, limit: Option
         query += f" ORDER BY {sortBy}"
         
     if limit:
-        try:
-            limit = int(limit)
-            if limit <= 0:
-                raise ValueError
-        except ValueError:
+        if limit <= 0:
             response.status_code = 422
             return {'message': "limit must be a positive integer."}
         query += f" LIMIT {limit}"
@@ -81,3 +77,36 @@ def create_student(response: Response, student: Student):
     con.close()
     
     return {'message': 'successfully insert record into database'}
+
+@app.delete("/students")
+def delete_student(response: Response, student_id: int):
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    
+    if not student_id: 
+        response.status_code = 422
+        return {"message": "Please enter a student_id"}
+    
+    if student_id <= 0:
+        response.status_code = 422
+        return {'message': "student id must be a positive integer."}
+    
+    # Check if the student exist in the database
+    cur.execute("SELECT * FROM student WHERE id = ?", (student_id,))
+    if not cur.fetchone():
+        con.close()
+        response.status_code = 400
+        return { "message": "Student doesn't exist"}
+    
+    # Delete the student record
+    try:
+        cur.execute("DELETE FROM student WHERE id = ?", (student_id,))
+        con.commit()
+    except sqlite3.Error as e:
+        con.close()
+        response.status_code = 422
+        return {'message': f'Error when deleting record into database: {e}'}
+    
+    con.close()
+    
+    return {'message': 'successfully delete record from the database'}
