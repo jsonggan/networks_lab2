@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Response
+from fastapi.responses import FileResponse
 from data import students
 from typing import Optional
 import sqlite3
@@ -8,6 +9,11 @@ from model.student import Student
 app = FastAPI()
 # Call the setup_database function to ensure the database is ready
 db_path = "simple.db"
+
+# Challenge 1: Return binary content types (image)
+@app.get("/image")
+def get_image():
+    return FileResponse("sutd.jpeg")
 
 @app.get("/")
 def read_root():
