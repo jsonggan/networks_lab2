@@ -8,6 +8,8 @@ run `docker compose up` to run the application
 
 ## Making HTTP Requests
 
+Please use the provided "Lab 2 network.postman_collection.json" for checking purpose.
+
 1. Retrieve All Students
    GET /students
    Optional Query Parameters: sortBy (id, gpa), limit (integer).  
